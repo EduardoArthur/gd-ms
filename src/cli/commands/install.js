@@ -1,6 +1,6 @@
 /**
  * GD-KS Install Command
- * 
+ *
  * Handles the installation of GD-KS into a project
  */
 
@@ -164,6 +164,7 @@ async function promptConfiguration(options) {
         { name: 'Windsurf', value: 'windsurf' },
         { name: 'VS Code (with Copilot/Continue)', value: 'vscode' },
         { name: 'Claude Code', value: 'claude-code' },
+        { name: 'ChatGPT (Codex)', value: 'chatgpt-codex' },
         { name: 'None / Other', value: 'none' }
       ],
       default: 'cursor'
@@ -369,7 +370,8 @@ async function showInstallationSummary(config, result) {
       'cursor':      { folder: '.cursor/rules/gdks/',     activation: 'Rules auto-apply when editing _gdks/ files' },
       'windsurf':    { folder: '.windsurf/',              activation: 'Load gdks-rules.md in AI context' },
       'vscode':      { folder: '.vscode/',                activation: 'See README.md for setup instructions' },
-      'claude-code': { folder: '.claude/commands/gdks/',  activation: 'Use /gdks commands' }
+      'claude-code': { folder: '.claude/commands/gdks/',  activation: 'Use /gdks commands' },
+      'chatgpt-codex': { folder: 'AGENTS.md + .codex/agents/', activation: 'Start a new Codex session to load project instructions and agents' }
     };
 
     const info = ideInfo[config.ide];
@@ -389,6 +391,10 @@ async function showInstallationSummary(config, result) {
     console.log(`     ${chalk.cyan('2.')} GD-KS rules auto-apply when editing ${chalk.yellow('_gdks/')} files`);
     console.log(`     ${chalk.cyan('3.')} Open ${chalk.yellow('_gdks/core/agents/gdks-master.md')} in chat`);
     console.log(`     ${chalk.cyan('4.')} Try ${chalk.yellow('*tutorial')} for a 15-min guided walkthrough`);
+  } else if (config.ide === 'chatgpt-codex') {
+    console.log(`     ${chalk.cyan('1.')} Open this project in ${chalk.cyan('ChatGPT Codex')}`);
+    console.log(`     ${chalk.cyan('2.')} Start a new session to load ${chalk.yellow('AGENTS.md')} (check AGENTS.override.md if present)`);
+    console.log(`     ${chalk.cyan('3.')} Start with ${chalk.yellow('*tutorial')} or ${chalk.yellow('*init')}`);
   } else {
     console.log(`     ${chalk.cyan('1.')} Open your project in ${chalk.cyan('Cursor')}, ${chalk.cyan('Windsurf')}, or ${chalk.cyan('VS Code')}`);
     console.log(`     ${chalk.cyan('2.')} Add ${chalk.yellow('_gdks/core/agents/gdks-master.md')} to your AI context`);

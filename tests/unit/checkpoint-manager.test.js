@@ -1,5 +1,6 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { basename } from 'node:path';
 
 import { CheckpointManager } from '../../src/core/state/checkpoint-manager.js';
 import { createSandbox } from '../helpers/sandbox.js';
@@ -28,7 +29,7 @@ describe('CheckpointManager', () => {
       const path = await cm.save(2, sampleState());
       assert.match(path, /phase-02-design/);
 
-      const loaded = await cm.load(path.split('/').pop());
+      const loaded = await cm.load(basename(path));
       assert.equal(loaded._checkpoint.phase, 2);
       assert.equal(loaded._checkpoint.phase_name, 'design');
       assert.equal(loaded.state.current_phase, 2);

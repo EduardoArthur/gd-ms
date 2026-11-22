@@ -5,10 +5,12 @@
 
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { writeFile } from 'fs/promises';
 import { ModuleManager } from './module-manager.js';
 import { FileManager } from './file-manager.js';
 import { AgentCompiler } from './agent-compiler.js';
 import { ManifestGenerator } from './manifest-generator.js';
+import { GitignoreGenerator } from './gitignore-generator.js';
 import { StateManager } from '../../../src/core/state/state-manager.js';
 import { ContractLoader } from '../../../src/core/contracts/contract-loader.js';
 import { EventLogger } from '../../../src/core/state/event-logger.js';
@@ -25,7 +27,7 @@ export class Installer {
     this.gdksDir = join(this.targetDir, '_gdks');
     this.outputDir = join(this.targetDir, options.outputFolder || '_gdks-output');
     this.config = options;
-    
+
     this.fileManager = new FileManager();
     this.moduleManager = new ModuleManager({ targetEngine: options.targetEngine || 'unreal-5' });
     this.agentCompiler = new AgentCompiler();
@@ -66,19 +68,23 @@ export class Installer {
       progressCallback('Generating manifest...');
       await this.generateManifest();
 
-      // Step 7: Create output directories
+      // Step 7: Create .gitignore for the selected engine
+      progressCallback('Creating .gitignore...');
+      await this.createGitignore();
+
+      // Step 8: Create output directories
       progressCallback('Creating output directories...');
       await this.createOutputDirectories();
 
-      // Step 8: Initialize project state (v0.4 Sprint 2)
+      // Step 9: Initialize project state (v0.4 Sprint 2)
       progressCallback('Initializing project state...');
       await this.initializeState();
 
-      // Step 9: Install default contracts (v0.4 Sprint 2)
+      // Step 10: Install default contracts (v0.4 Sprint 2)
       progressCallback('Installing handoff contracts...');
       await this.installContracts();
 
-      // Step 10: Install IDE configuration
+      // Step 11: Install IDE configuration
       if (this.config.ide && this.config.ide !== 'none') {
         progressCallback(`Installing ${this.config.ide} configuration...`);
         await this.installIdeConfig();
@@ -278,6 +284,20 @@ export class Installer {
   }
 
   /**
+   * Create an engine-specific .gitignore without replacing user-maintained
+   * project settings during an update or reinstallation.
+   */
+  async createGitignore() {
+    const gitignorePath = join(this.targetDir, '.gitignore');
+    if (await this.fileManager.exists(gitignorePath)) {
+      return;
+    }
+
+    const engine = this.config.targetEngine || 'unreal-5';
+    await this.fileManager.writeFile(gitignorePath, GitignoreGenerator.generate(engine));
+  }
+
+  /**
    * Create output directories for generated documents
    */
   async createOutputDirectories() {
@@ -351,7 +371,7 @@ export class Installer {
    */
   async installIdeConfig() {
     const ide = this.config.ide || 'cursor';
-    
+
     switch (ide) {
     case 'cursor':
       await this.installCursorConfig();
@@ -364,6 +384,9 @@ export class Installer {
       break;
     case 'claude-code':
       await this.installClaudeCodeConfig();
+      break;
+    case 'chatgpt-codex':
+      await this.installChatGPTCodexConfig();
       break;
     default:
       // No IDE config to install
@@ -380,10 +403,10 @@ export class Installer {
 
     // Copy all .mdc files from cursor config
     const sourceDir = join(IDE_CONFIGS_PATH, 'cursor', 'rules');
-    
+
     if (await this.fileManager.exists(sourceDir)) {
       const files = await this.fileManager.listFiles(sourceDir, '.mdc');
-      
+
       for (const file of files) {
         await this.fileManager.copy(
           join(sourceDir, file),
@@ -401,7 +424,7 @@ export class Installer {
     await this.fileManager.ensureDir(windsurfDir);
 
     const sourceFile = join(IDE_CONFIGS_PATH, 'windsurf', 'gdks-rules.md');
-    
+
     if (await this.fileManager.exists(sourceFile)) {
       await this.fileManager.copy(
         sourceFile,
@@ -419,10 +442,10 @@ export class Installer {
 
     // Copy settings and README
     const sourceDir = join(IDE_CONFIGS_PATH, 'vscode');
-    
+
     if (await this.fileManager.exists(sourceDir)) {
       const files = await this.fileManager.listFiles(sourceDir);
-      
+
       for (const file of files) {
         await this.fileManager.copy(
           join(sourceDir, file),
@@ -440,15 +463,82 @@ export class Installer {
     await this.fileManager.ensureDir(claudeDir);
 
     const sourceDir = join(IDE_CONFIGS_PATH, 'claude-code', 'commands');
-    
+
     if (await this.fileManager.exists(sourceDir)) {
       const files = await this.fileManager.listFiles(sourceDir, '.md');
-      
+
       for (const file of files) {
         await this.fileManager.copy(
           join(sourceDir, file),
           join(claudeDir, file)
         );
+      }
+    }
+  }
+
+  /**
+   * Install ChatGPT Codex project instructions.
+   *
+   * Maintain a GD-KS block while preserving existing project instructions.
+   */
+  async installChatGPTCodexConfig() {
+    await this.installCodexAgents();
+
+    const targetFile = join(this.targetDir, 'AGENTS.md');
+    const templateDir = join(IDE_CONFIGS_PATH, 'chatgpt-codex');
+    const template = await this.fileManager.readFile(join(templateDir, 'AGENTS.md'));
+    const start = '<!-- gdks:instructions:start -->';
+    const end = '<!-- gdks:instructions:end -->';
+    const block = `${start}\n${template.trim()}\n${end}\n`;
+    const current = await this.fileManager.exists(targetFile)
+      ? await this.fileManager.readFile(targetFile)
+      : '';
+    const startIndex = current.indexOf(start);
+    const endIndex = current.indexOf(end, startIndex + start.length);
+    let content;
+    if (startIndex !== -1 && endIndex !== -1) {
+      content = current.slice(0, startIndex) + block.trimEnd() + current.slice(endIndex + end.length);
+    } else if (current.replaceAll('\r\n', '\n').trim() === template.replaceAll('\r\n', '\n').trim()) {
+      content = block;
+    } else {
+      content = current + (current ? '\n\n' : '') + block;
+    }
+    await this.fileManager.writeFile(targetFile, content);
+  }
+
+  /**
+   * Register installed GD-KS roles as project-scoped Codex subagents.
+   */
+  async installCodexAgents() {
+    const targetDir = join(this.targetDir, '.codex', 'agents');
+    await this.fileManager.ensureDir(targetDir);
+
+    for (const moduleName of new Set(['core', ...(this.config.modules || [])])) {
+      const sourceDir = join(this.gdksDir, moduleName, 'agents');
+      for (const file of await this.fileManager.listFiles(sourceDir, '.agent.yaml')) {
+        const id = file.slice(0, -'.agent.yaml'.length);
+        const name = `gdks-${id.replace(/^gdks-/, '')}`;
+        const { metadata } = await this.fileManager.readYaml(join(sourceDir, file));
+        const instructions = [
+          'Resolve project paths from the project root. Read _gdks/_config/project-config.yaml for language and output settings.',
+          `Read _gdks/${moduleName}/agents/${id}.md and its corresponding .agent.yaml before responding.`,
+          'Use that persona, principles, critical actions, and menu. Read the workflow instructions for the assigned step.',
+          'Follow the parent task scope. Do not show an activation menu or start an interactive workflow unless assigned.',
+          'Return guidance, proposals, or questions to the parent for the assigned step only.',
+          'The parent handles user interaction, decisions, workflow progression, and file writes.'
+        ].join('\n');
+        const content = [
+          `name = ${JSON.stringify(name)}`,
+          `description = ${JSON.stringify(metadata?.title || name)}`,
+          `developer_instructions = ${JSON.stringify(instructions)}`,
+          ''
+        ].join('\n');
+
+        try {
+          await writeFile(join(targetDir, `${name}.toml`), content, { flag: 'wx' });
+        } catch (error) {
+          if (error.code !== 'EEXIST') throw error;
+        }
       }
     }
   }

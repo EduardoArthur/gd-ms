@@ -22,7 +22,7 @@ GD-KS gives you a team of specialized AI agents that walk you from a blank page 
 - 📋 **40+ guided workflows** — step-by-step processes for each task
 - 🔒 **Handoff contracts** — can't advance a phase until the right deliverables are verified
 - 🧠 **Central project state** — agents remember decisions across sessions
-- 🖥️ **Multi-IDE** — Cursor, Windsurf, VS Code, Claude Code
+- 🖥️ **Multi-IDE** — Cursor, Windsurf, VS Code, Claude Code, ChatGPT (Codex)
 - ✅ **Schema-validated** — 7 JSON schemas enforce consistency
 - 🧪 **240 automated tests** across unit and integration, ~93% coverage
 
@@ -42,7 +42,7 @@ The wizard asks four questions:
 3. Which teams to install
 4. **Engine** — Godot 4, Unity 6, or Unreal Engine 5
 
-After install, open your project in an AI-capable IDE (Cursor, Windsurf, VS Code with Continue, or Claude Code). Load the `gdks-master` agent and type `*tutorial` to take the 15-minute guided walkthrough.
+After install, open your project in an AI-capable client (Cursor, Windsurf, VS Code with Continue, Claude Code, or Codex). Load the `gdks-master` agent and type `*tutorial` to take the 15-minute guided walkthrough.
 
 ---
 
@@ -228,6 +228,43 @@ your-project/
 - **Windsurf** — rules file for AI context
 - **VS Code** — works with Copilot, Continue, Cody
 - **Claude Code** — command files for slash commands
+- **ChatGPT (Codex)** — project instructions in `AGENTS.md` and optional native subagents in `.codex/agents/*.toml`
+
+### ChatGPT (Codex) setup
+
+Run the installer and select **ChatGPT (Codex)** when asked which IDE you use:
+
+```bash
+npx gd-ks install
+```
+
+Open the installed project in a local Codex client (desktop app, CLI, or IDE
+extension). Start a new session after installation so Codex loads `AGENTS.md`,
+then send `*help`, `*init`, or `*tutorial`. To switch specialists, send an
+installed agent ID such as `@concept-brainstormer`. These are GD-KS text
+conventions interpreted by the project instructions, rather than native Codex
+slash commands or mentions.
+
+Like the Claude Code integration, this loads the compiled agents and workflows
+from `_gdks/`. Each client uses its own configuration format: Claude receives
+`.claude/commands/gdks/*.md`; Codex receives project instructions plus one TOML
+definition per installed agent, with `name`, `description`, and
+`developer_instructions`. Only installed modules and agents enabled by the
+installation preset are registered.
+
+Normal activation runs the persona in the main chat. When you request
+delegation, a supported Codex client can use the registered subagents; the main
+chat keeps user interaction and file writes. Existing TOML definitions are
+preserved on reinstall. The installer adds or refreshes a marked GD-KS block
+in `AGENTS.md`, keeping instructions outside that block. If your project uses
+`AGENTS.override.md`, include the GD-KS instructions there as well: Codex reads
+the override instead of `AGENTS.md` at that directory level.
+
+This option configures local Codex project files. It does not create a custom
+GPT or install agents into a regular ChatGPT web conversation.
+
+Official references: [project instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+and [custom subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents).
 
 ---
 
