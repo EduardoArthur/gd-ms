@@ -14,8 +14,8 @@
       "properties": {
         "id": {
           "type": "string",
-          "pattern": "^_gdks/[a-z-]+/agents/[a-z0-9-]+\\.md$",
-          "description": "Compiled markdown path, e.g., '_gdks/design/agents/mechanics-designer.md'"
+          "pattern": "^_(?:gems|gdks)/[a-z-]+/agents/[a-z0-9-]+\\.md$",
+          "description": "Compiled Markdown path, e.g., '_gems/core/agents/gems-orchestrator.md'"
         },
         "name": {
           "type": "string",

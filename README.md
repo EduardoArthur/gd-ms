@@ -1,4 +1,18 @@
-# 🎮 GD-KS (Game Development Knowledge System)
+# GEMS (Game Engine Migration System)
+
+GEMS installs migration agents in a destination game project. The initial package installs the GEMS Orchestrator and can configure Codex to load it.
+
+Run `npm pack` in this repository to build the local package. From the root of a project already created in the destination engine, run the installer with the absolute path to that package.
+
+```shell
+npm exec --package="<absolute path to the GEMS tarball>" -- gems install
+```
+
+Use `--engine unreal-5`, `--engine godot-4`, or `--engine unity-6` to select a destination explicitly. With `--yes`, the installer uses the saved or detected engine and defaults to Codex for a new installation. Use `--ide none` to skip writing Codex configuration and load `_gems/core/agents/gems-orchestrator.md` directly in your assistant.
+
+In a new assistant session, type `*init` to record the migration setup, `*status` to review it, or `*resume` to recover the recorded context. `*approve` reports the prerequisites for approving a plan until the planning workflow is installed.
+
+## GD-KS reference
 
 [![npm version](https://img.shields.io/npm/v/gd-ks.svg)](https://www.npmjs.com/package/gd-ks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

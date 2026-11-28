@@ -1,16 +1,16 @@
 /**
- * GD-KS - Game Development Knowledge System
+ * GEMS - Game Engine Migration System
  * 
  * Main module entry point
  * 
- * @module gd-ks
+ * @module gems
  */
 
 // Export version
 export { version } from './version.js';
 
 // Export CLI
-export { default as cli } from './cli/index.js';
+export { runGemsCli as cli } from './cli/gems.js';
 
 // Future exports for programmatic usage
 // export { Installer } from './installer/index.js';

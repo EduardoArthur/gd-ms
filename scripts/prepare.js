@@ -1,5 +1,5 @@
 /**
- * GD-KS Prepare Script
+ * Prepare CLI entry points during npm install.
  * 
  * Runs during npm install to set up the package
  */
@@ -12,18 +12,15 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-async function prepare() {
+for (const bin of ['gems.js', 'gd-ks.js']) {
   try {
-    // Make bin file executable
-    const binPath = join(__dirname, '..', 'bin', 'gd-ks.js');
+    const binPath = join(__dirname, '..', 'bin', bin);
     await chmod(binPath, '755');
-    console.log('✓ Made bin/gd-ks.js executable');
+    console.log(`✓ Made bin/${bin} executable`);
   } catch (error) {
     // Ignore errors on Windows
     if (error.code !== 'ENOENT') {
-      console.warn('Warning: Could not set permissions on bin file');
+      console.warn(`Warning: Could not set permissions on bin/${bin}`);
     }
   }
 }
-
-prepare();

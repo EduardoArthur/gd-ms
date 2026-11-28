@@ -18,18 +18,25 @@ import { EventLogger } from '../../../src/core/state/event-logger.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Path to IDE configs
-const IDE_CONFIGS_PATH = join(__dirname, '..', '..', '..', 'src', 'ide-configs');
+const SRC_ROOT = join(__dirname, '..', '..', '..', 'src');
+const IDE_CONFIGS_PATH = join(SRC_ROOT, 'ide-configs');
 
 export class Installer {
   constructor(options = {}) {
     this.targetDir = options.targetDir || process.cwd();
-    this.gdksDir = join(this.targetDir, '_gdks');
-    this.outputDir = join(this.targetDir, options.outputFolder || '_gdks-output');
+    this.product = options.product === 'gems' ? 'gems' : 'gdks';
+    this.installFolder = `_${this.product}`;
+    this.installDir = join(this.targetDir, this.installFolder);
+    this.gdksDir = this.installDir;
+    this.outputFolder = options.outputFolder || `${this.installFolder}-output`;
+    this.outputDir = join(this.targetDir, this.outputFolder);
     this.config = options;
 
     this.fileManager = new FileManager();
-    this.moduleManager = new ModuleManager({ targetEngine: options.targetEngine || 'unreal-5' });
+    this.moduleManager = new ModuleManager({
+      targetEngine: options.targetEngine,
+      srcRoot: this.product === 'gems' ? join(SRC_ROOT, 'gems') : SRC_ROOT
+    });
     this.agentCompiler = new AgentCompiler();
     this.manifestGenerator = new ManifestGenerator();
   }
@@ -64,25 +71,21 @@ export class Installer {
       progressCallback('Creating configuration files...');
       await this.createConfigFiles();
 
-      // Step 6: Generate manifest
-      progressCallback('Generating manifest...');
-      await this.generateManifest();
-
-      // Step 7: Create .gitignore for the selected engine
-      progressCallback('Creating .gitignore...');
-      await this.createGitignore();
-
-      // Step 8: Create output directories
-      progressCallback('Creating output directories...');
-      await this.createOutputDirectories();
-
-      // Step 9: Initialize project state (v0.4 Sprint 2)
-      progressCallback('Initializing project state...');
-      await this.initializeState();
-
-      // Step 10: Install default contracts (v0.4 Sprint 2)
-      progressCallback('Installing handoff contracts...');
-      await this.installContracts();
+      if (this.product === 'gems') {
+        progressCallback('Creating output directories...');
+        await this.fileManager.ensureDir(this.outputDir);
+      } else {
+        progressCallback('Generating manifest...');
+        await this.generateManifest();
+        progressCallback('Creating .gitignore...');
+        await this.createGitignore();
+        progressCallback('Creating output directories...');
+        await this.createOutputDirectories();
+        progressCallback('Initializing project state...');
+        await this.initializeState();
+        progressCallback('Installing handoff contracts...');
+        await this.installContracts();
+      }
 
       // Step 11: Install IDE configuration
       if (this.config.ide && this.config.ide !== 'none') {
@@ -90,9 +93,14 @@ export class Installer {
         await this.installIdeConfig();
       }
 
+      if (this.product === 'gems') {
+        progressCallback('Generating manifest...');
+        await this.generateManifest();
+      }
+
       return {
         success: true,
-        gdksDir: this.gdksDir,
+        [`${this.product}Dir`]: this.installDir,
         outputDir: this.outputDir,
         ide: this.config.ide
       };
@@ -109,6 +117,11 @@ export class Installer {
    * Create the main directory structure
    */
   async createDirectoryStructure() {
+    if (this.product === 'gems') {
+      await this.fileManager.ensureDir(join(this.installDir, '_config'));
+      return;
+    }
+
     const directories = [
       this.gdksDir,
       join(this.gdksDir, 'core'),
@@ -131,7 +144,7 @@ export class Installer {
    * Install a specific module
    */
   async installModule(moduleName) {
-    const moduleTarget = join(this.gdksDir, moduleName);
+    const moduleTarget = join(this.installDir, moduleName);
 
     await this.fileManager.ensureDir(moduleTarget);
     await this.moduleManager.installModule(moduleName, moduleTarget);
@@ -143,7 +156,7 @@ export class Installer {
    * (both .agent.yaml source and any compiled .md) from the installed tree.
    */
   async compileAgents() {
-    const modules = ['core', ...(this.config.modules || [])];
+    const modules = new Set(['core', ...(this.config.modules || [])]);
 
     // Load preset if one is configured
     let preset = null;
@@ -159,7 +172,7 @@ export class Installer {
     }
 
     for (const moduleName of modules) {
-      const agentsDir = join(this.gdksDir, moduleName, 'agents');
+      const agentsDir = join(this.installDir, moduleName, 'agents');
 
       // Remove disabled agents before compiling
       if (preset) {
@@ -239,6 +252,24 @@ export class Installer {
    * Create configuration files
    */
   async createConfigFiles() {
+    const configPath = join(this.installDir, '_config', 'project-config.yaml');
+    if (this.product === 'gems') {
+      const existing = await this.fileManager.exists(configPath) ? await this.fileManager.readYaml(configPath) : {};
+      await this.fileManager.writeYaml(configPath, {
+        ...existing,
+        project: { name: this.config.projectName, ...existing?.project },
+        target_engine: this.config.targetEngine,
+        settings: {
+          ...existing?.settings,
+          output_folder: this.outputFolder,
+          communication_language: this.config.language || 'en',
+          ide: this.config.ide || 'codex'
+        },
+        modules: { installed: ['core', ...(this.config.modules || [])] }
+      });
+      return;
+    }
+
     // Project config
     const projectConfig = {
       project: {
@@ -256,7 +287,7 @@ export class Installer {
     };
 
     await this.fileManager.writeYaml(
-      join(this.gdksDir, '_config', 'project-config.yaml'),
+      configPath,
       projectConfig
     );
   }
@@ -265,22 +296,25 @@ export class Installer {
    * Generate installation manifest
    */
   async generateManifest() {
+    const manifestPath = join(this.installDir, '_config', 'manifest.yaml');
+    const existing = this.product === 'gems' && await this.fileManager.exists(manifestPath)
+      ? await this.fileManager.readYaml(manifestPath)
+      : null;
     const manifest = this.manifestGenerator.generate({
+      product: this.product,
       version: this.config.installerVersion || '0.1.0-alpha.1',
-      installedAt: new Date().toISOString(),
+      installedAt: existing?.installed_at,
       modules: ['core', ...(this.config.modules || [])],
       config: {
         projectName: this.config.projectName,
         language: this.config.language,
-        outputFolder: this.config.outputFolder,
+        outputFolder: this.outputFolder,
+        targetEngine: this.config.targetEngine,
         ide: this.config.ide
       }
     });
 
-    await this.fileManager.writeYaml(
-      join(this.gdksDir, '_config', 'manifest.yaml'),
-      manifest
-    );
+    await this.fileManager.writeYaml(manifestPath, manifest);
   }
 
   /**
@@ -385,6 +419,7 @@ export class Installer {
     case 'claude-code':
       await this.installClaudeCodeConfig();
       break;
+    case 'codex':
     case 'chatgpt-codex':
       await this.installChatGPTCodexConfig();
       break;
@@ -479,16 +514,17 @@ export class Installer {
   /**
    * Install ChatGPT Codex project instructions.
    *
-   * Maintain a GD-KS block while preserving existing project instructions.
+   * Maintain the installed product's block and preserve project instructions.
    */
   async installChatGPTCodexConfig() {
     await this.installCodexAgents();
 
     const targetFile = join(this.targetDir, 'AGENTS.md');
-    const templateDir = join(IDE_CONFIGS_PATH, 'chatgpt-codex');
+    const configRoot = this.product === 'gems' ? join(SRC_ROOT, 'gems', 'ide-configs') : IDE_CONFIGS_PATH;
+    const templateDir = join(configRoot, 'chatgpt-codex');
     const template = await this.fileManager.readFile(join(templateDir, 'AGENTS.md'));
-    const start = '<!-- gdks:instructions:start -->';
-    const end = '<!-- gdks:instructions:end -->';
+    const start = `<!-- ${this.product}:instructions:start -->`;
+    const end = `<!-- ${this.product}:instructions:end -->`;
     const block = `${start}\n${template.trim()}\n${end}\n`;
     const current = await this.fileManager.exists(targetFile)
       ? await this.fileManager.readFile(targetFile)
@@ -507,21 +543,22 @@ export class Installer {
   }
 
   /**
-   * Register installed GD-KS roles as project-scoped Codex subagents.
+   * Register installed roles as project-scoped Codex subagents.
    */
   async installCodexAgents() {
     const targetDir = join(this.targetDir, '.codex', 'agents');
     await this.fileManager.ensureDir(targetDir);
 
     for (const moduleName of new Set(['core', ...(this.config.modules || [])])) {
-      const sourceDir = join(this.gdksDir, moduleName, 'agents');
+      const sourceDir = join(this.installDir, moduleName, 'agents');
       for (const file of await this.fileManager.listFiles(sourceDir, '.agent.yaml')) {
         const id = file.slice(0, -'.agent.yaml'.length);
-        const name = `gdks-${id.replace(/^gdks-/, '')}`;
+        const prefix = `${this.product}-`;
+        const name = id.startsWith(prefix) ? id : `${prefix}${id}`;
         const { metadata } = await this.fileManager.readYaml(join(sourceDir, file));
         const instructions = [
-          'Resolve project paths from the project root. Read _gdks/_config/project-config.yaml for language and output settings.',
-          `Read _gdks/${moduleName}/agents/${id}.md and its corresponding .agent.yaml before responding.`,
+          `Resolve project paths from the project root. Read ${this.installFolder}/_config/project-config.yaml for language and output settings.`,
+          `Read ${this.installFolder}/${moduleName}/agents/${id}.md and its corresponding .agent.yaml before responding.`,
           'Use that persona, principles, critical actions, and menu. Read the workflow instructions for the assigned step.',
           'Follow the parent task scope. Do not show an activation menu or start an interactive workflow unless assigned.',
           'Return guidance, proposals, or questions to the parent for the assigned step only.',
@@ -547,17 +584,17 @@ export class Installer {
    * Check if GD-KS is already installed
    */
   async isInstalled() {
-    return this.fileManager.exists(this.gdksDir);
+    return this.fileManager.exists(this.installDir);
   }
 
   /**
    * Get installed version from manifest
    */
   async getInstalledVersion() {
-    const manifestPath = join(this.gdksDir, '_config', 'manifest.yaml');
+    const manifestPath = join(this.installDir, '_config', 'manifest.yaml');
     if (await this.fileManager.exists(manifestPath)) {
       const manifest = await this.fileManager.readYaml(manifestPath);
-      return manifest.version;
+      return this.product === 'gems' ? manifest.gems_version : manifest.version;
     }
     return null;
   }

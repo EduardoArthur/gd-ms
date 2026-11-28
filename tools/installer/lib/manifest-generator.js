@@ -8,8 +8,11 @@ export class ManifestGenerator {
    * Generate installation manifest
    */
   generate(options = {}) {
-    return {
-      gdks_version: options.version || '0.1.0-alpha.1',
+    const product = options.product || 'gdks';
+    const gems = product === 'gems';
+    const installedModules = options.modules || ['core'];
+    const manifest = {
+      [`${product}_version`]: options.version || '0.1.0-alpha.1',
       installed_at: options.installedAt || new Date().toISOString(),
       updated_at: new Date().toISOString(),
       
@@ -21,26 +24,33 @@ export class ManifestGenerator {
       },
       
       modules: {
-        installed: options.modules || ['core'],
-        available: ['core', 'ideation', 'design', 'planning', 'engine']
+        installed: installedModules,
+        available: gems ? installedModules : ['core', 'ideation', 'design', 'planning', 'engine']
       },
       
       project: {
         name: options.config?.projectName || 'My Game Project',
         language: options.config?.language || 'en',
-        output_folder: options.config?.outputFolder || '_gdks-output'
+        output_folder: options.config?.outputFolder || `_${product}-output`
       },
       
       agents: {
         compiled: true,
         format: 'markdown'
-      },
-      
-      tracking: {
-        workflow_status_file: '_gdks-output/gdks-workflow-status.yaml',
-        sprint_status_file: '_gdks-output/03-planning/sprint-status.yaml'
       }
     };
+
+    if (gems) {
+      manifest.project.target_engine = options.config?.targetEngine;
+      manifest.project.ide = options.config?.ide || 'codex';
+    } else {
+      manifest.tracking = {
+        workflow_status_file: '_gdks-output/gdks-workflow-status.yaml',
+        sprint_status_file: '_gdks-output/03-planning/sprint-status.yaml'
+      };
+    }
+
+    return manifest;
   }
 
   /**
