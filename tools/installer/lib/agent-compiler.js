@@ -142,6 +142,15 @@ export class AgentCompiler {
     }
     md += '</workflows>\n\n';
 
+    const specialistRoutes = menu.filter(item => item.delegate_to);
+    if (specialistRoutes.length > 0) {
+      md += '## Specialist Routes\n\n';
+      for (const { trigger, delegate_to: specialist } of specialistRoutes) {
+        md += `- \`*${trigger}\` → \`${specialist}\`\n`;
+      }
+      md += '\n';
+    }
+
     const inlineActions = menu.filter(item => item.action?.startsWith('#') && agent.actions?.[item.action.slice(1)]);
     if (inlineActions.length > 0) {
       md += '## Command Instructions\n\n';
@@ -150,12 +159,20 @@ export class AgentCompiler {
       }
     }
 
+    if (gems) {
+      md += '## Asking for User Input\n\n';
+      md += '- When you need a decision or confirmation from the user and there are clear options, prefer the selectable question tool exposed by the session. In Codex use `request_user_input` or `request_user_input_async` when available. In Claude Code use `AskUserQuestion` when available.\n';
+      md += '- Offer two or three distinct options with short labels and explain their consequences when needed. Use a numbered list in chat when the tool is unavailable. Ask for free text when the answer is open-ended, such as a project path or exact version.\n';
+      md += '- If the next step depends on the choice, wait for the actual reply. Approval requires an explicit answer. A suggested or preselected option and a dismissed or unanswered question leave approval pending.\n';
+      md += '- If you are a delegated specialist, send the question and available options to the Orchestrator so it can ask in the main session.\n\n';
+    }
+
     // Instructions for IDE
     md += '---\n\n';
     md += '## How to Use\n\n';
     md += '1. Load this agent in your IDE\n';
     md += '2. Type a command from the menu above (e.g., `*help`)\n';
-    md += '3. Follow the workflow instructions\n';
+    md += '3. Follow the command or workflow instructions\n';
     md += '4. Use `*chat` for free conversation\n\n';
 
     // Footer

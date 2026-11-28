@@ -1,0 +1,10 @@
+name: migration
+version: 0.1.0
+description: GEMS migration specialists for diagnosis, planning, implementation, and verification
+agents:
+  - source-analyst
+  - migration-planner
+  - engine-specialist
+  - equivalence-verifier
+dependencies:
+  - core

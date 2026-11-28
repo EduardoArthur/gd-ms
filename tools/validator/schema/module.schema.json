@@ -9,7 +9,7 @@
   "properties": {
     "name": {
       "type": "string",
-      "enum": ["core", "ideation", "design", "planning", "engine"]
+      "enum": ["core", "ideation", "design", "planning", "engine", "migration"]
     },
     "version": {
       "type": "string",

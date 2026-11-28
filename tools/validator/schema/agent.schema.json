@@ -37,7 +37,7 @@
         },
         "module": {
           "type": "string",
-          "enum": ["core", "ideation", "design", "planning", "engine"]
+          "enum": ["core", "ideation", "design", "planning", "engine", "migration"]
         },
         "team": {
           "type": "string",
@@ -109,6 +109,11 @@
           "action": {
             "type": "string",
             "description": "Inline action reference (e.g., '#systems-design')"
+          },
+          "delegate_to": {
+            "type": "string",
+            "pattern": "^_gems/migration/agents/[a-z0-9-]+\\.md$",
+            "description": "Installed GEMS specialist that handles this command"
           }
         }
       }

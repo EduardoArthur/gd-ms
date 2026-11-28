@@ -14,7 +14,7 @@ export async function runGemsCli(argv = process.argv) {
 
   program
     .command('install')
-    .description('Install the GEMS Orchestrator in the current destination project')
+    .description('Install the GEMS migration agents in the current destination project')
     .addOption(new Option('--engine <id>', 'Destination engine').choices(engines))
     .addOption(new Option('--ide <id>', 'Assistant integration').choices(['codex', 'none']))
     .option('-y, --yes', 'Skip prompts and use detected or saved settings')

@@ -63,6 +63,11 @@ export class Installer {
         }
       }
 
+      if (this.product === 'gems' && modules.includes('migration')) {
+        progressCallback('Installing engine profiles...');
+        await this.installGemsEngineProfiles();
+      }
+
       // Step 4: Compile all agents
       progressCallback('Compiling agents...');
       await this.compileAgents();
@@ -148,6 +153,22 @@ export class Installer {
 
     await this.fileManager.ensureDir(moduleTarget);
     await this.moduleManager.installModule(moduleName, moduleTarget);
+  }
+
+  async installGemsEngineProfiles() {
+    const { EngineProfileManager } = await import('../../../src/core/engines/engine-profile-manager.js');
+    const profiles = new EngineProfileManager();
+    const profileDir = join(this.installDir, 'migration', 'engine-profiles');
+
+    for (const { id } of ModuleManager.getAvailableEngines()) {
+      const { schema_version, engine, paradigms, capabilities } = await profiles.load(id);
+      await this.fileManager.writeYaml(join(profileDir, `${id}.yaml`), {
+        schema_version,
+        engine,
+        paradigms,
+        capabilities
+      });
+    }
   }
 
   /**
@@ -559,9 +580,9 @@ export class Installer {
         const instructions = [
           `Resolve project paths from the project root. Read ${this.installFolder}/_config/project-config.yaml for language and output settings.`,
           `Read ${this.installFolder}/${moduleName}/agents/${id}.md and its corresponding .agent.yaml before responding.`,
-          'Use that persona, principles, critical actions, and menu. Read the workflow instructions for the assigned step.',
+          'Use that persona, principles, and critical actions. Follow the instructions for the assigned command or workflow.',
           'Follow the parent task scope. Do not show an activation menu or start an interactive workflow unless assigned.',
-          'Return guidance, proposals, or questions to the parent for the assigned step only.',
+          'Return findings, proposed changes, or questions to the parent for the assigned step only. Leave file writes to the parent.',
           'The parent handles user interaction, decisions, workflow progression, and file writes.'
         ].join('\n');
         const content = [

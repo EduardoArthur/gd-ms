@@ -59,6 +59,7 @@ export async function installGems(options, targetDir = process.cwd()) {
     targetDir,
     targetEngine,
     ide,
+    modules: ['migration'],
     projectName: existing?.project?.name || basename(targetDir),
     language: existing?.settings?.communication_language || 'en',
     installerVersion: version
@@ -66,7 +67,7 @@ export async function installGems(options, targetDir = process.cwd()) {
   const result = await installer.install();
   if (!result.success) throw new Error(result.error);
 
-  console.log(`GEMS installed for ${targetEngine}.`);
+  console.log(`GEMS agents installed for ${targetEngine}.`);
   console.log(ide === 'codex'
     ? 'Open the destination project in Codex and type *init.'
     : 'Load _gems/core/agents/gems-orchestrator.md in your assistant and type *init.');

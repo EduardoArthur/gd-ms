@@ -1,6 +1,6 @@
 # GEMS (Game Engine Migration System)
 
-GEMS installs migration agents in a destination game project. The initial package installs the GEMS Orchestrator and can configure Codex to load it.
+GEMS installs the Orchestrator and four migration specialists in a destination game project. With the Codex integration enabled, it registers all five agents and adds routing instructions to the project's `AGENTS.md`.
 
 Run `npm pack` in this repository to build the local package. From the root of a project already created in the destination engine, run the installer with the absolute path to that package.
 
@@ -10,7 +10,9 @@ npm exec --package="<absolute path to the GEMS tarball>" -- gems install
 
 Use `--engine unreal-5`, `--engine godot-4`, or `--engine unity-6` to select a destination explicitly. With `--yes`, the installer uses the saved or detected engine and defaults to Codex for a new installation. Use `--ide none` to skip writing Codex configuration and load `_gems/core/agents/gems-orchestrator.md` directly in your assistant.
 
-In a new assistant session, type `*init` to record the migration setup, `*status` to review it, or `*resume` to recover the recorded context. `*approve` reports the prerequisites for approving a plan until the planning workflow is installed.
+In a new assistant session, type `*init` to record the migration setup. The Orchestrator routes `*diagnose` to the Source Analyst, `*plan` to the Migration Planner, `*implement` to the Engine Specialist, and `*verify` to the Equivalence Verifier. Use `*approve` to review and confirm the current plan revision before implementation, `*status` to review progress, or `*resume` to recover recorded context.
+
+For decisions with clear alternatives, GEMS agents prefer selectable options when the session provides them. This also applies when you load the Orchestrator manually in Claude Code. Sessions without a selectable question tool use numbered choices in chat.
 
 ## GD-KS reference
 
