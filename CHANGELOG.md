@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### GEMS
+
+- Install the Orchestrator and four migration specialists in a destination game project, with optional Codex registration and selectable questions when available.
+- Run diagnosis, planning, implementation, and verification with versioned approvals, attempt recovery, and evidence-based handoff contracts.
+- Package the GEMS CLI, migration assets, and engine profiles. The installed manifest lists the distributed artifacts, and the package test runs the CLI from the npm archive.
+
 ## [0.4.0-beta.2] - 2026-04-20 (revised 2026-04-23)
 
 Two releases rolled into one beta: the **Sprint 5 Guided Tutorial**

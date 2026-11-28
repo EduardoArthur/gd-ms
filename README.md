@@ -1,378 +1,66 @@
 # GEMS (Game Engine Migration System)
 
-GEMS installs the Orchestrator and four migration specialists in a destination game project. With the Codex integration enabled, it registers all five agents and adds routing instructions to the project's `AGENTS.md`.
+GEMS installs migration agents and workflows in an existing destination game project. The Orchestrator coordinates diagnosis, planning, implementation, and verification. The CLI records decisions and attempts and checks the conditions for advancing each phase.
 
-Run `npm pack` in this repository to build the local package. From the root of a project already created in the destination engine, run the installer with the absolute path to that package.
+## Install in a destination project
 
-```shell
-npm exec --package="<absolute path to the GEMS tarball>" -- gems install
-```
+You need Node.js 20 or newer, npm, a project created in the destination engine, and access to the source project. GEMS includes profiles for Godot 4, Unity 6, and Unreal Engine 5. The diagnosis evaluates coverage for the selected versions, platform, resources, and behaviors.
 
-Use `--engine unreal-5`, `--engine godot-4`, or `--engine unity-6` to select a destination explicitly. With `--yes`, the installer uses the saved or detected engine and defaults to Codex for a new installation. Use `--ide none` to skip writing Codex configuration and load `_gems/core/agents/gems-orchestrator.md` directly in your assistant.
+1. Obtain the GEMS npm archive or run `npm install` and `npm pack` from the GEMS repository to build it.
+2. Open a terminal at the **destination project root** and run the installer with the absolute path to that archive.
 
-In a new assistant session, type `*init` to record the migration setup. The Orchestrator routes `*diagnose` to the Source Analyst, `*plan` to the Migration Planner, `*implement` to the Engine Specialist, and `*verify` to the Equivalence Verifier. Use `*approve` to review and confirm the current plan revision before implementation, `*status` to review progress, or `*resume` to recover recorded context.
+   ~~~shell
+   npm exec --package="<absolute path to gems-0.4.1-beta.2.tgz>" -- gems install
+   ~~~
 
-For decisions with clear alternatives, GEMS agents prefer selectable options when the session provides them. This also applies when you load the Orchestrator manually in Claude Code. Sessions without a selectable question tool use numbered choices in chat.
+3. Open the same destination directory in a new Codex session and type `*init`.
 
-The four workflows are installed in `_gems/migration/workflows/`. They use the JSON templates in `_gems/migration/templates/` and save migration records in the configured output folder. When upgrading a project with an older Markdown setup, use `*init` to confirm its details before saving the structured setup.
+Use `--engine godot-4`, `--engine unity-6`, or `--engine unreal-5` to select an engine explicitly. `--yes` uses the saved or detected engine and defaults to Codex on a new installation. With `--ide none`, load `_gems/core/agents/gems-orchestrator.md` manually in your assistant, including in Claude Code. The agents prefer selectable choices when the session offers them and use numbered choices in chat otherwise.
 
-| CLI command | Purpose |
+To update an installed project, run the installer again with the new archive. Reinstallation updates the distributed workflows and installed assets, preserves migration history and output artifacts, and keeps project instructions outside the managed GEMS block in `AGENTS.md`.
+
+## Run a migration with the agents
+
+| Command | Role | What happens |
+| --- | --- | --- |
+| `*init` | Orchestrator | Confirm the source path, engine versions, and target platform. |
+| `*diagnose` | Source Analyst | Record the source revision, inventory, scenarios, and gaps in route coverage. |
+| `*plan` | Migration Planner | Propose a versioned strategy, units, technical checks, and equivalence criteria. |
+| `*approve` | Orchestrator | Record the developer's explicit approval of the current plan revision. |
+| `*implement` | Engine Specialist | Register an attempt before editing. Apply the approved scope, run the planned checks, and record the candidate. |
+| `*verify` | Equivalence Verifier | Evaluate the current candidate against the agreed criteria and record evidence. |
+| `*status` and `*resume` | Orchestrator | Read the recorded phase, blockers, and any open attempt. |
+
+The agents read the workflow instructions from `_gems/migration/workflows/` and use templates from `_gems/migration/templates/`. The source project is a read-only reference. Operations that would write to the source use a separate working copy. An upgrade from an older Markdown setup starts with `*init` to confirm its details for the structured record.
+
+## Inspect and recover from the terminal
+
+| Command | Purpose |
 | --- | --- |
 | `gems status` | Show the current phase, approval, attempts, and contract blockers. |
-| `gems history --phase <phase>` | Read recorded events. Omit the filter for the full history. |
-| `gems validate` | Check the current phase contract. A blocked contract exits with status 1. |
-| `gems approve --revision <id> --actor <developer>` | Record the developer's approval of the current plan revision and content. |
-| `gems advance --actor <name>` | Record the result of attempting the current phase transition. |
-| `gems attempt start` and `gems attempt finish` | Record an approved unit before editing and register its result afterward. |
-| `gems resume` | Report an open attempt and changes to its planned files. Use `gems attempt abandon --help` for recovery options. |
-| `gems replan --reason <text> --actor <name>` | Return to planning, or diagnosis when its inputs changed. |
-
-Use `node "<runtime.entry>" <command>` if `gems` is off PATH. The installation records the entry in `_gems/_config/project-config.yaml`. The CLI uses the same project root in either case. The journal under `_gems/_state/history/` records state and events together. Each passed verification result requires an output evidence file tied to the current candidate attempt. The CLI checks recorded evidence and file identities. The verifier evaluates the gameplay observations.
-
-## GD-KS reference
-
-[![npm version](https://img.shields.io/npm/v/gd-ks.svg)](https://www.npmjs.com/package/gd-ks)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/node/v/gd-ks.svg)](https://nodejs.org)
-[![Developed by RE-G3X](https://img.shields.io/badge/Developed%20by-RE--G3X-blueviolet)](https://re-g3x.github.io/homepage/)
-
-**AI-powered, multi-engine framework for game development.**
-
-> Developed by **[RE-G3X](https://re-g3x.github.io/homepage/)** — a research group dedicated to scientific research in digital games.
-
-GD-KS gives you a team of specialized AI agents that walk you from a blank page to implementation-ready specs — through brainstorming, design, planning, and engine-specific implementation guidance. Works with **Unreal Engine 5**, **Godot 4**, and **Unity 6**.
-
----
-
-## ✨ What's inside
-
-- 🧠 **32 specialized AI agents** — each with its own role, personality, and menu of workflows
-- 🎯 **4 development phases** — Ideation, Design, Planning, Engine
-- 🎮 **Three supported engines** — Godot 4, Unity 6, Unreal Engine 5 (each with its own implementation team)
-- 🎛️ **7 presets** — from game jam (8 agents) to AAA studio (32 agents), tuned for your team size
-- 📋 **40+ guided workflows** — step-by-step processes for each task
-- 🔒 **Handoff contracts** — can't advance a phase until the right deliverables are verified
-- 🧠 **Central project state** — agents remember decisions across sessions
-- 🖥️ **Multi-IDE** — Cursor, Windsurf, VS Code, Claude Code, ChatGPT (Codex)
-- ✅ **Schema-validated** — 7 JSON schemas enforce consistency
-- 🧪 **240 automated tests** across unit and integration, ~93% coverage
-
----
-
-## 🚀 Quick start
-
-```bash
-mkdir my-game && cd my-game
-npx gd-ks install
-```
-
-The wizard asks four questions:
-
-1. Project name
-2. **Preset** — how big is your project? (solo-indie by default)
-3. Which teams to install
-4. **Engine** — Godot 4, Unity 6, or Unreal Engine 5
-
-After install, open your project in an AI-capable client (Cursor, Windsurf, VS Code with Continue, Claude Code, or Codex). Load the `gdks-master` agent and type `*tutorial` to take the 15-minute guided walkthrough.
-
----
-
-## 🎯 Presets
-
-Not every project needs 32 agents. Pick the preset that fits your scope:
-
-| Preset | Agents | Best for |
-|---|---|---|
-| ⚡ **Minimal** | ~8 | Game jams, hobby, 48h-2 weeks |
-| 🎮 **Solo Indie** | ~16 | 1-2 devs, 3-18 months _(default)_ |
-| 🏢 **Small Studio** | ~23 | 3-10 devs, 9-24 months |
-| 🏛️ **Full Studio** | 32 | AAA, 24+ months, all agents active |
-| 📖 **Narrative-Heavy** | ~20 | RPG, Visual Novel |
-| 📱 **Mobile Casual** | ~17 | F2P, hypercasual |
-| 🎛️ **Custom** | 32 | All active, tune individually |
-
-Switch anytime:
-
-```bash
-gd-ks preset switch solo-indie
-gd-ks preset show              # inspect the active preset
-gd-ks preset enable-agent marketing-strategist
-gd-ks preset disable-agent playtest-coordinator
-```
-
-See [`docs/presets-guide.md`](docs/presets-guide.md) for a complete reference.
-
----
-
-## 🎮 Engines
-
-GD-KS supports three engines as first-class, pluggable modules. Each lives under `src/modules/engines/<engine-id>/` with its own `engine-profile.yaml`. Contracts and templates adapt automatically via `{{#engine}}` blocks.
-
-### Godot 4 — `godot-4`
-
-4 agents: **Guilherme** (Architect), **Gabi** (GDScript Lead), **Gina** (Node Specialist), **Érico** (Coordinator). Idioms: statically-typed GDScript, `@export`, signal-driven coupling, autoloads for genuine globals, Custom Resources (`.tres`) for content.
-
-### Unity 6 — `unity-6`
-
-4 agents: **Uma** (Architect), **Ugo** (C# Lead), **Uli** (Prefab Specialist), **Enzo** (Coordinator). Idioms: `private [SerializeField]`, cached `GetComponent` in `Awake`, ScriptableObject event channels over singletons, Addressables over `Resources.Load`, URP/HDRP/Built-in pipeline choice.
-
-### Unreal Engine 5 — `unreal-5`
-
-5 agents: **Ulysses** (Architect), **Priscilla** (C++ Lead), **Simon** (Systems — GAS/AI/Subsystems), **Bella** (Blueprint Specialist), **Eric** (Coordinator). Idioms: `UPROPERTY(EditAnywhere, BlueprintReadWrite)`, C++/Blueprint boundary design, Unreal Insights profiling, PIE-to-packaged-build testing flow.
-
-See [`docs/adding-new-engine.md`](docs/adding-new-engine.md) to add your own (Bevy, O3DE, GameMaker, etc.).
-
----
-
-## 📦 The four phases
-
-### 🧠 Ideation Team (Phase 1)
-
-| Agent | Role |
-|---|---|
-| **Sparky** 💡 | Concept Brainstormer |
-| **Marcus** 📊 | Market Analyst |
-| **Mira** ⚙️ | Mechanics Explorer |
-| **Ivy** 🎯 | Ideation Coordinator |
-
-Output: `_gdks-output/01-ideation/` — concept briefs, mechanics exploration, handoff doc.
-
-### 🎨 Design Team (Phase 2)
-
-Up to 18 agents depending on preset. Anchors: **Diana** (Game Design Director), **Marco** (Mechanics Designer), **Lucas** (Core Loop Specialist). Specialists activate with the right preset: narrative team for RPGs, progression team for mobile, art/audio directors for most setups.
-
-Output: `_gdks-output/02-design/` — GDD, design pillars, core mechanics spec, gameplay loops, progression system, narrative/art/audio bibles.
-
-### 📋 Planning Team (Phase 3)
-
-| Agent | Role |
-|---|---|
-| **Sam** 📊 | Scrum Master |
-| **Tina** 📅 | Technical Producer |
-| **Dana** 📝 | Documentation Specialist |
-| **Peter** 🎯 | Planning Coordinator |
-
-Output: `_gdks-output/03-planning/` — epics, stories, sprint plan, roadmap, risks.
-
-### ⚙️ Engine Team (Phase 4)
-
-Engine-specific (see engine section above). Always includes a Coordinator for cross-team spec review and LLM-prompt preparation.
-
-Output: `_gdks-output/04-engine/` — architecture, class/prefab/scene specs, LLM code-generation prompts ready to paste into Claude, ChatGPT, or any model.
-
----
-
-## 🔒 Handoff contracts
-
-You can't jump from Design to Planning just because you feel like it. Each phase transition is guarded by a contract in `_gdks/_contracts/` that checks:
-
-- Required deliverables exist and meet word-count minimums
-- Required sections are present (e.g. "Pillars", "Core Mechanics")
-- Quality gates pass (no open blockers, minimum completion %)
-- Contracts adapt to preset — `story-bible.md` is required for narrative-heavy but optional for minimal
-
-```bash
-gd-ks validate --phase=2        # Am I ready to hand off?
-gd-ks handoff --from=2 --to=3   # Advance (runs the contract check)
-gd-ks handoff --from=2 --to=3 --force   # Override when you know what you're doing
-gd-ks rollback                  # Restore state from a checkpoint
-```
-
-See [`docs/state-and-contracts.md`](docs/state-and-contracts.md) for the full memory model.
-
----
-
-## 🎯 CLI commands
-
-```bash
-gd-ks install                    # Wizard install
-gd-ks install --yes              # Quick install with defaults
-
-gd-ks state show                 # Inspect current project state
-gd-ks state history --last=30    # Read the audit log
-gd-ks state decision "Use 2D pixel art" --by=aurora
-gd-ks state question "Support co-op?" --from=marco
-gd-ks state context              # Print the state block agents consume
-gd-ks state inject               # Inject state into compiled agent markdown
-
-gd-ks validate --phase=2         # Contract check for current phase
-gd-ks handoff --from=2 --to=3    # Advance phases
-gd-ks rollback                   # Restore from a checkpoint
-
-gd-ks preset show                # Active preset details
-gd-ks preset list                # All 7 presets
-gd-ks preset switch <id>
-gd-ks preset enable-agent <agent>
-gd-ks preset disable-agent <agent>
-
-gd-ks tutorial                   # Bootstrap the guided tutorial (sandbox mode)
-gd-ks tutorial --info            # Syllabus without side effects
-gd-ks tutorial --reset           # Clear tutorial sandbox
-
-gd-ks info                       # System information
-```
-
-In your IDE chat, agents respond to `*<command>` triggers defined in their menus:
-
-```
-*help          # show the agent's command menu
-*chat          # free-form conversation
-*brainstorm    # (Sparky) creative ideation
-*gdd           # (Diana) produce the Game Design Document
-*code-prompt   # (Engine Lead) generate an LLM prompt for a story
-*tutorial      # (gdks-master) 15-min guided walkthrough
-```
-
----
-
-## 📁 Project structure
-
-```
-your-project/
-├── _gdks/                           # GD-KS framework (agents, contracts, state)
-│   ├── core/                        # Master agent and core workflows
-│   ├── ideation/                    # Ideation team
-│   ├── design/                      # Design team
-│   ├── planning/                    # Planning team
-│   ├── engine/                      # Engine team (chosen engine)
-│   ├── _config/                     # Project config, presets, features
-│   ├── _contracts/                  # Handoff contracts
-│   └── _state/
-│       ├── project-state.yaml       # Single source of truth
-│       ├── history/events.ndjson    # Append-only audit log
-│       └── checkpoints/             # Snapshots before each handoff
-│
-├── _gdks-output/                    # Generated documents
-│   ├── 01-ideation/
-│   ├── 02-design/
-│   ├── 03-planning/
-│   └── 04-engine/
-│
-└── .cursor/rules/gdks/              # IDE rules (if Cursor)
-```
-
----
-
-## 🖥️ IDE support
-
-- **Cursor** _(recommended)_ — auto-applies rules based on file context
-- **Windsurf** — rules file for AI context
-- **VS Code** — works with Copilot, Continue, Cody
-- **Claude Code** — command files for slash commands
-- **ChatGPT (Codex)** — project instructions in `AGENTS.md` and optional native subagents in `.codex/agents/*.toml`
-
-### ChatGPT (Codex) setup
-
-Run the installer and select **ChatGPT (Codex)** when asked which IDE you use:
-
-```bash
-npx gd-ks install
-```
-
-Open the installed project in a local Codex client (desktop app, CLI, or IDE
-extension). Start a new session after installation so Codex loads `AGENTS.md`,
-then send `*help`, `*init`, or `*tutorial`. To switch specialists, send an
-installed agent ID such as `@concept-brainstormer`. These are GD-KS text
-conventions interpreted by the project instructions, rather than native Codex
-slash commands or mentions.
-
-Like the Claude Code integration, this loads the compiled agents and workflows
-from `_gdks/`. Each client uses its own configuration format: Claude receives
-`.claude/commands/gdks/*.md`; Codex receives project instructions plus one TOML
-definition per installed agent, with `name`, `description`, and
-`developer_instructions`. Only installed modules and agents enabled by the
-installation preset are registered.
-
-Normal activation runs the persona in the main chat. When you request
-delegation, a supported Codex client can use the registered subagents; the main
-chat keeps user interaction and file writes. Existing TOML definitions are
-preserved on reinstall. The installer adds or refreshes a marked GD-KS block
-in `AGENTS.md`, keeping instructions outside that block. If your project uses
-`AGENTS.override.md`, include the GD-KS instructions there as well: Codex reads
-the override instead of `AGENTS.md` at that directory level.
-
-This option configures local Codex project files. It does not create a custom
-GPT or install agents into a regular ChatGPT web conversation.
-
-Official references: [project instructions with AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
-and [custom subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents).
-
----
-
-## 🎓 Learning path
-
-1. **Install:** `npx gd-ks install`
-2. **Take the tutorial:** `gd-ks tutorial`, then `*tutorial` in your IDE — 15 minutes, walks you through Cosmic Explorer (a sample puzzle-platformer project)
-3. **Read the guides:**
-   - [State & contracts](docs/state-and-contracts.md) — how the memory and handoff systems work
-   - [Presets guide](docs/presets-guide.md) — which preset fits your project
-   - [Adding a new engine](docs/adding-new-engine.md) — for contributors
-
----
-
-## 🔄 Upgrading from v0.3
-
-```bash
-# Dry-run to preview changes
-node node_modules/gd-ks/scripts/migrate-v03-to-v04.js
-
-# Apply
-node node_modules/gd-ks/scripts/migrate-v03-to-v04.js --apply
-```
-
-The migration:
-- Creates `_gdks/_state/` and `_gdks/_contracts/`
-- Infers your current phase from existing output docs
-- Preserves all your work — `_gdks-output/` is never modified
-
----
-
-## 🤝 Contributing
-
-Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) if present, or open an issue at https://github.com/muriloms/gd-ks/issues.
-
-**Ideas for contribution:**
-- New engine modules (Bevy, O3DE, GameMaker, LÖVE)
-- Agents for specific genres (roguelike specialist, VR UX, etc.)
-- New presets for niche profiles
-- Translations of step markdown (tutorial supports i18n through file swaps)
-
----
-
-## 📄 License
-
-MIT License — see [LICENSE](LICENSE) for details.
-
----
-
-## 🔬 About RE-G3X
-
-GD-KS is developed by **[RE-G3X](https://re-g3x.github.io/homepage/)** — a research group dedicated to the scientific study of digital games. The group investigates topics at the intersection of game development, AI-assisted tooling, generative pipelines, and player experience.
-
-If you use GD-KS in academic work, please cite the project:
-
-```bibtex
-@software{gdks_2026,
-  author = {Moro, Murilo and {RE-G3X}},
-  title = {GD-KS: A Multi-Agent, Multi-Engine Framework for
-           AI-Assisted Game Development},
-  year = {2026},
-  version = {v0.4.1-beta.2},
-  url = {https://github.com/muriloms/gd-ks},
-  license = {MIT}
-}
-```
-
-🌐 Website: **[https://re-g3x.github.io/homepage/](https://re-g3x.github.io/homepage/)**
-
----
-
-## 🙏 Acknowledgments
-
-Inspired by the [BMAD-METHOD](https://github.com/bmad-code-org/BMAD-METHOD) framework by bmad-code-org.
-
----
-
-**Made with ❤️ by [RE-G3X](https://re-g3x.github.io/homepage/) for indie game developers, solo devs, and studios of every size.**
-
-[Report a bug](https://github.com/muriloms/gd-ks/issues) · [Request a feature](https://github.com/muriloms/gd-ks/issues) · [npm package](https://www.npmjs.com/package/gd-ks) · [RE-G3X](https://re-g3x.github.io/homepage/)
+| `gems history [--phase <phase>]` | Read recorded events, optionally by phase. |
+| `gems validate` | Check the current contract. Exit status 1 means the transition has blockers. |
+| `gems advance --actor <name> [--phase <phase>]` | Apply the current contract and record the result. |
+| `gems approve --revision <id> --actor <developer>` | Record approval for the exact plan content. An edit to the plan requires approval of the revised content. |
+| `gems attempt start --unit <id> --actor <name>` | Open an attempt and record the planned files before editing. |
+| `gems attempt finish <id> --actor <name>` | Register the outcome from `attempts/<id>.json` in the output folder. |
+| `gems resume` | Find any open attempt and inspect changes to its planned files. |
+| `gems attempt abandon <id> --reason <text> --actor <name>` | Close an incomplete attempt and preserve the files. If partial files changed, review them and then pass `--reconciled`. |
+| `gems replan --reason <text> --actor <name>` | Return to planning, or diagnosis if its inputs changed. |
+
+Run commands from the destination root. If `gems` is off PATH after installation through `npm exec`, use `node "<runtime.entry>" <command>` with the entry in `_gems/_config/project-config.yaml`. If that package location moved, rerun the installer with the archive to refresh it.
+
+The delivery contract checks the plan and candidate identities, planned technical checks, and evidence files. Every agreed criterion gets a result. Mandatory criteria must pass, and each passing result must reference evidence in the output folder. The verifier evaluates what the gameplay observations show.
+
+## Installed files
+
+| Path | Contents |
+| --- | --- |
+| `_gems/_config/project-config.yaml` | Destination configuration and the CLI entry path. |
+| `_gems/_config/manifest.yaml` | Installed GEMS version, modules, and distributed artifact paths. |
+| `_gems/core/` and `_gems/migration/` | Agent definitions, compiled menus, workflows, templates, and engine profiles. |
+| `_gems/_state/history/` | Recorded phase, approval, attempts, and history. |
+| `_gems-output/` | Migration records, attempt reports, and evidence. |
+| `AGENTS.md` and `.codex/agents/` | Managed instructions and five agent registrations when Codex integration is enabled. |
+
+See the [packaging guide](docs/NPM-PUBLISH-GUIDE.md) for the release checks and the [changelog](CHANGELOG.md) for release history.

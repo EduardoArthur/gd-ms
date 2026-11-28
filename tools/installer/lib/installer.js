@@ -11,9 +11,6 @@ import { FileManager } from './file-manager.js';
 import { AgentCompiler } from './agent-compiler.js';
 import { ManifestGenerator } from './manifest-generator.js';
 import { GitignoreGenerator } from './gitignore-generator.js';
-import { StateManager } from '../../../src/core/state/state-manager.js';
-import { ContractLoader } from '../../../src/core/contracts/contract-loader.js';
-import { EventLogger } from '../../../src/core/state/event-logger.js';
 import { MigrationState } from '../../../src/gems/migration-state.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -338,7 +335,37 @@ export class Installer {
       }
     });
 
+    if (this.product === 'gems') manifest.artifacts = await this.gemsArtifacts(manifest.modules.installed);
     await this.fileManager.writeYaml(manifestPath, manifest);
+  }
+
+  async gemsArtifacts(modules) {
+    const files = new Set([`${this.installFolder}/_config/project-config.yaml`]);
+    for (const name of new Set(modules)) {
+      const modulePath = `${this.installFolder}/${name}`;
+      const descriptor = await this.moduleManager.getModuleConfig(name);
+      files.add(`${modulePath}/module.yaml`);
+      for (const entry of descriptor.agents ?? []) {
+        const id = typeof entry === 'string' ? entry : entry.id;
+        files.add(`${modulePath}/agents/${id}.agent.yaml`);
+        files.add(`${modulePath}/agents/${id}.md`);
+        if (['codex', 'chatgpt-codex'].includes(this.config.ide)) {
+          files.add(`.codex/agents/${this.codexAgentName(id)}.toml`);
+        }
+      }
+      for (const entry of descriptor.workflows ?? []) {
+        const id = typeof entry === 'string' ? entry : entry.id;
+        files.add(`${modulePath}/workflows/${id}/workflow.yaml`);
+        files.add(`${modulePath}/workflows/${id}/instructions.md`);
+      }
+      const templates = join(this.moduleManager.getModulePath(name), 'templates');
+      for (const file of await this.fileManager.listFiles(templates)) files.add(`${modulePath}/templates/${file}`);
+      if (name === 'migration') {
+        for (const { id } of ModuleManager.getAvailableEngines()) files.add(`${modulePath}/engine-profiles/${id}.yaml`);
+      }
+    }
+    if (['codex', 'chatgpt-codex'].includes(this.config.ide)) files.add('AGENTS.md');
+    return [...files].sort();
   }
 
   /**
@@ -382,6 +409,8 @@ export class Installer {
    * Idempotent: if state already exists, leave it alone.
    */
   async initializeState() {
+    const { StateManager } = await import('../../../src/core/state/state-manager.js');
+    const { EventLogger } = await import('../../../src/core/state/event-logger.js');
     const sm = new StateManager({ projectRoot: this.targetDir });
     if (await sm.exists()) {
       return; // upgrading an existing install — don't overwrite
@@ -408,6 +437,7 @@ export class Installer {
    * Does not overwrite user-customized contracts.
    */
   async installContracts() {
+    const { ContractLoader } = await import('../../../src/core/contracts/contract-loader.js');
     const sourceDir = ContractLoader.getPackageContractsDir();
     const targetDir = join(this.gdksDir, '_contracts');
 
@@ -577,8 +607,7 @@ export class Installer {
       const sourceDir = join(this.installDir, moduleName, 'agents');
       for (const file of await this.fileManager.listFiles(sourceDir, '.agent.yaml')) {
         const id = file.slice(0, -'.agent.yaml'.length);
-        const prefix = `${this.product}-`;
-        const name = id.startsWith(prefix) ? id : `${prefix}${id}`;
+        const name = this.codexAgentName(id);
         const { metadata } = await this.fileManager.readYaml(join(sourceDir, file));
         const instructions = [
           `Resolve project paths from the project root. Read ${this.installFolder}/_config/project-config.yaml for language and output settings.`,
@@ -602,6 +631,11 @@ export class Installer {
         }
       }
     }
+  }
+
+  codexAgentName(id) {
+    const prefix = `${this.product}-`;
+    return id.startsWith(prefix) ? id : `${prefix}${id}`;
   }
 
   /**

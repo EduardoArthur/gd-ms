@@ -1,12 +1,12 @@
-# Contributing to GD-KS
+# Contributing to GEMS
 
-Thank you for your interest in contributing to GD-KS! This document provides guidelines for contributing.
+GEMS uses Node.js 20 or newer. Use the local CLI and package checks to verify changes before opening a pull request.
 
 ## How to Contribute
 
 ### Reporting Bugs
 
-1. Check if the bug has already been reported in [Issues](https://github.com/muriloms/gd-ks/issues)
+1. Check if the bug has already been reported in [Issues](https://github.com/EduardoArthur/GEMS/issues)
 2. If not, create a new issue with:
    - Clear title and description
    - Steps to reproduce
@@ -15,7 +15,7 @@ Thank you for your interest in contributing to GD-KS! This document provides gui
 
 ### Suggesting Features
 
-1. Check existing [Issues](https://github.com/muriloms/gd-ks/issues) for similar suggestions
+1. Check existing [Issues](https://github.com/EduardoArthur/GEMS/issues) for similar suggestions
 2. Create a new issue with:
    - Clear description of the feature
    - Use case and benefits
@@ -26,27 +26,19 @@ Thank you for your interest in contributing to GD-KS! This document provides gui
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/my-feature`
 3. Make your changes
-4. Run tests: `npm test`
-5. Run linting: `npm run lint`
+4. Run `npm test` and `npm run validate:schemas`.
+5. Run `npm run lint` and `npm run test:package`.
 6. Commit with clear messages
 7. Push and create a Pull Request
 
 ## Development Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/muriloms/gd-ks.git
-cd gd-ks
-
-# Install dependencies
 npm install
-
-# Link for local testing
-npm link
-
-# Run locally
-gd-ks --help
+npm start -- --help
 ```
+
+See the [packaging guide](docs/NPM-PUBLISH-GUIDE.md) to exercise the distribution in a destination project.
 
 ## Code Style
 

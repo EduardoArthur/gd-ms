@@ -45,6 +45,9 @@ test('installs all GEMS agents and preserves destination files on reinstall', as
     assert.deepEqual(manifest.modules.installed, config.modules.installed);
     assert.equal(manifest.gems_version, version);
     assert.equal(manifest.project.target_engine, config.target_engine);
+    assert.ok(manifest.artifacts.includes(orchestratorPath));
+    assert.ok(manifest.artifacts.includes('AGENTS.md'));
+    await Promise.all(manifest.artifacts.map(read));
     assert.deepEqual(yaml.load(await read('_gems/core/module.yaml')).agents, ['gems-orchestrator']);
     for (const command of ['init', 'status', 'approve', 'resume', ...Object.keys(specialists)]) {
       assert.ok(orchestrator.includes(`### \`*${command}\``), `Missing action for *${command}`);
@@ -128,6 +131,8 @@ test('can install for manual agent loading and reuses the saved integration choi
     const config = yaml.load(await readFile(join(path, configPath), 'utf8'));
     assert.equal(config.target_engine, 'godot-4');
     assert.equal(config.settings.ide, 'none');
+    const manifest = yaml.load(await readFile(join(path, manifestPath), 'utf8'));
+    assert.ok(!manifest.artifacts.some(file => file === 'AGENTS.md' || file.startsWith('.codex/')));
     assert.deepEqual((await readdir(path)).sort(), ['_gems', '_gems-output', 'project.godot']);
     assert.equal((await readdir(join(path, '_gems/migration/agents'))).length, 8);
   }, 'gems-manual');

@@ -8,9 +8,6 @@ eslint.config.js
 prettier.config.js
 .prettierrc*
 
-# Documentation (keep README, LICENSE, CHANGELOG)
-docs/NPM-PUBLISH-GUIDE.md
-
 # Samples
 samples/
 

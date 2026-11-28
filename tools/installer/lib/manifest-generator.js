@@ -17,7 +17,7 @@ export class ManifestGenerator {
       updated_at: new Date().toISOString(),
       
       installation: {
-        method: 'npx',
+        method: gems ? 'gems install' : 'npx',
         node_version: process.version,
         platform: process.platform,
         arch: process.arch
