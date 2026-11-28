@@ -101,5 +101,11 @@
     "fs-extra": "^11.2.0",
     "ora": "^8.1.0",
     "prettier": "^3.4.2"
+  },
+  "overrides": {
+    "test-exclude": {
+      "glob": "14.0.6",
+      "minimatch": "11.0.9"
+    }
   }
 }
