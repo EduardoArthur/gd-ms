@@ -1,0 +1,7 @@
+{
+  "kind": "plan",
+  "revision": "r1",
+  "strategy": "Describe the approved scope and proposed approach",
+  "units": [{ "id": "example-unit", "description": "Describe the change", "depends_on": [], "paths": ["Source/Example.cpp"], "technical_checks": [{ "id": "compile", "procedure": "Build the target project" }] }],
+  "criteria": [{ "id": "example-behavior", "phase": "verification", "scenario": "Describe the inputs", "method": "Compare recorded outcomes", "expected": "Describe the expected behavior", "required": true, "tolerance": null }]
+}

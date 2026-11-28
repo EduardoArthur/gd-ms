@@ -1,0 +1,19 @@
+name: verification
+description: Check every agreed equivalence criterion against the current candidate and its evidence.
+module: migration
+phase: 4
+agents:
+  primary: equivalence-verifier
+inputs:
+  required: [migration-diagnosis.json, migration-plan.json, attempts/<id>.json]
+outputs: [migration-verification.json]
+steps:
+  - id: identify-candidate
+    name: Confirm the candidate and approved criteria
+    type: read
+  - id: evaluate-criteria
+    name: Evaluate the scenarios and record evidence
+    type: multi-agent
+  - id: check-contract
+    name: Validate and record the delivery decision
+    type: validation

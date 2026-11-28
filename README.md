@@ -14,6 +14,21 @@ In a new assistant session, type `*init` to record the migration setup. The Orch
 
 For decisions with clear alternatives, GEMS agents prefer selectable options when the session provides them. This also applies when you load the Orchestrator manually in Claude Code. Sessions without a selectable question tool use numbered choices in chat.
 
+The four workflows are installed in `_gems/migration/workflows/`. They use the JSON templates in `_gems/migration/templates/` and save migration records in the configured output folder. When upgrading a project with an older Markdown setup, use `*init` to confirm its details before saving the structured setup.
+
+| CLI command | Purpose |
+| --- | --- |
+| `gems status` | Show the current phase, approval, attempts, and contract blockers. |
+| `gems history --phase <phase>` | Read recorded events. Omit the filter for the full history. |
+| `gems validate` | Check the current phase contract. A blocked contract exits with status 1. |
+| `gems approve --revision <id> --actor <developer>` | Record the developer's approval of the current plan revision and content. |
+| `gems advance --actor <name>` | Record the result of attempting the current phase transition. |
+| `gems attempt start` and `gems attempt finish` | Record an approved unit before editing and register its result afterward. |
+| `gems resume` | Report an open attempt and changes to its planned files. Use `gems attempt abandon --help` for recovery options. |
+| `gems replan --reason <text> --actor <name>` | Return to planning, or diagnosis when its inputs changed. |
+
+Use `node "<runtime.entry>" <command>` if `gems` is off PATH. The installation records the entry in `_gems/_config/project-config.yaml`. The CLI uses the same project root in either case. The journal under `_gems/_state/history/` records state and events together. Each passed verification result requires an output evidence file tied to the current candidate attempt. The CLI checks recorded evidence and file identities. The verifier evaluates the gameplay observations.
+
 ## GD-KS reference
 
 [![npm version](https://img.shields.io/npm/v/gd-ks.svg)](https://www.npmjs.com/package/gd-ks)

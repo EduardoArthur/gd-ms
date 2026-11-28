@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GEMS Migration Artifact",
+  "type": "object",
+  "required": ["kind"],
+  "properties": {
+    "kind": { "enum": ["setup", "diagnosis", "plan", "implementation", "verification"] }
+  },
+  "allOf": [
+    { "if": { "properties": { "kind": { "const": "setup" } } }, "then": { "$ref": "#/$defs/setup" } },
+    { "if": { "properties": { "kind": { "const": "diagnosis" } } }, "then": { "$ref": "#/$defs/diagnosis" } },
+    { "if": { "properties": { "kind": { "const": "plan" } } }, "then": { "$ref": "#/$defs/plan" } },
+    { "if": { "properties": { "kind": { "const": "implementation" } } }, "then": { "$ref": "#/$defs/implementation" } },
+    { "if": { "properties": { "kind": { "const": "verification" } } }, "then": { "$ref": "#/$defs/verification" } }
+  ],
+  "$defs": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$" },
+    "texts": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "ids": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/id" } },
+    "outcome": { "enum": ["passed", "failed", "inconclusive"] },
+    "setup": {
+      "required": ["source_path", "source_engine", "source_version", "target_engine", "target_version", "platform"],
+      "properties": {
+        "kind": { "const": "setup" },
+        "source_path": { "$ref": "#/$defs/text" },
+        "source_engine": { "$ref": "#/$defs/id" },
+        "source_version": { "$ref": "#/$defs/text" },
+        "target_engine": { "$ref": "#/$defs/id" },
+        "target_version": { "$ref": "#/$defs/text" },
+        "platform": { "$ref": "#/$defs/text" }
+      }
+    },
+    "diagnosis": {
+      "required": ["source_revision", "inventory", "coverage", "blockers"],
+      "properties": {
+        "kind": { "const": "diagnosis" },
+        "source_revision": { "$ref": "#/$defs/text" },
+        "inventory": { "$ref": "#/$defs/texts", "minItems": 1 },
+        "reference_scenarios": { "$ref": "#/$defs/texts" },
+        "blockers": { "$ref": "#/$defs/texts" },
+        "coverage": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["item", "status", "notes"],
+            "properties": {
+              "item": { "$ref": "#/$defs/text" },
+              "status": { "enum": ["supported", "unsupported", "unknown"] },
+              "notes": { "$ref": "#/$defs/text" }
+            }
+          }
+        }
+      }
+    },
+    "plan": {
+      "required": ["revision", "strategy", "units", "criteria"],
+      "properties": {
+        "kind": { "const": "plan" },
+        "revision": { "$ref": "#/$defs/id" },
+        "strategy": { "$ref": "#/$defs/text" },
+        "units": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["id", "depends_on", "paths", "technical_checks"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "depends_on": { "$ref": "#/$defs/ids" },
+              "paths": { "$ref": "#/$defs/texts", "minItems": 1 },
+              "technical_checks": {
+                "type": "array", "minItems": 1,
+                "items": {
+                  "type": "object", "required": ["id", "procedure"],
+                  "properties": {
+                    "id": { "$ref": "#/$defs/id" },
+                    "procedure": { "$ref": "#/$defs/text" }
+                  }
+                }
+              },
+              "description": { "$ref": "#/$defs/text" }
+            }
+          }
+        },
+        "criteria": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["id", "phase", "scenario", "method", "expected", "required", "tolerance"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "phase": { "enum": ["diagnosis", "planning", "implementation", "verification"] },
+              "scenario": { "$ref": "#/$defs/text" },
+              "method": { "$ref": "#/$defs/text" },
+              "expected": { "$ref": "#/$defs/text" },
+              "required": { "type": "boolean" },
+              "tolerance": { "type": ["string", "number", "null"] }
+            }
+          }
+        }
+      }
+    },
+    "implementation": {
+      "required": ["attempt_id", "plan_revision", "unit_id", "outcome", "technical_checks"],
+      "properties": {
+        "kind": { "const": "implementation" },
+        "attempt_id": { "$ref": "#/$defs/id" },
+        "plan_revision": { "$ref": "#/$defs/id" },
+        "unit_id": { "$ref": "#/$defs/id" },
+        "outcome": { "enum": ["passed", "failed"] },
+        "candidate_revision": { "$ref": "#/$defs/text" },
+        "technical_checks": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["id", "procedure", "outcome"],
+            "properties": {
+              "id": { "$ref": "#/$defs/id" },
+              "procedure": { "$ref": "#/$defs/text" },
+              "outcome": { "$ref": "#/$defs/outcome" },
+              "evidence": { "$ref": "#/$defs/texts" }
+            }
+          }
+        }
+      }
+    },
+    "verification": {
+      "required": ["plan_revision", "attempt_id", "candidate_revision", "results"],
+      "properties": {
+        "kind": { "const": "verification" },
+        "plan_revision": { "$ref": "#/$defs/id" },
+        "attempt_id": { "$ref": "#/$defs/id" },
+        "candidate_revision": { "$ref": "#/$defs/text" },
+        "results": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["criterion_id", "outcome", "evidence", "notes"],
+            "properties": {
+              "criterion_id": { "$ref": "#/$defs/id" },
+              "outcome": { "$ref": "#/$defs/outcome" },
+              "evidence": { "$ref": "#/$defs/texts" },
+              "notes": { "$ref": "#/$defs/text" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

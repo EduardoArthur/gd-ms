@@ -1,0 +1,5 @@
+# Diagnose the migration
+
+1. Use `gems status` to confirm the current phase is `diagnosis`. Read the installed configuration and the engine profiles. If setup is missing, run the Orchestrator's `*init` action. Confirm the source path, both engine versions, the engine identifiers, and the target platform. Add confirmed setup to the configured output folder using `../../templates/setup.json` as the field reference. Reuse details from any existing Markdown setup after confirming them.
+2. Give the Source Analyst the confirmed setup and inspection scope. Preserve the source. Record the source revision, inventory, reproducible reference scenarios, and the coverage and limitations of the route. Give every coverage entry a status and a reason. Record findings in `migration-diagnosis.json` using `../../templates/diagnosis.json`. Reserve `blockers` for issues that prevent this scope from proceeding.
+3. Run `gems validate`. Present the result and any open decisions. When the developer requests the transition, run `gems advance --phase diagnosis --actor <name>` to record the contract outcome. Leave the current phase pending if a blocker remains.

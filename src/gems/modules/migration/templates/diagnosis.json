@@ -1,0 +1,8 @@
+{
+  "kind": "diagnosis",
+  "source_revision": "replace-with-source-revision",
+  "inventory": ["Identify the in-scope scenes, scripts, and assets"],
+  "reference_scenarios": ["Describe reproducible inputs and observed source behavior"],
+  "coverage": [{ "item": "Describe the operation or behavior", "status": "unknown", "notes": "Record the basis for the status" }],
+  "blockers": []
+}

@@ -1,5 +1,6 @@
 import { basename, join } from 'node:path';
 import { readdir } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import inquirer from 'inquirer';
 import { FileManager, Installer, ModuleManager } from '../../../tools/installer/index.js';
 import { version } from '../../version.js';
@@ -62,6 +63,7 @@ export async function installGems(options, targetDir = process.cwd()) {
     modules: ['migration'],
     projectName: existing?.project?.name || basename(targetDir),
     language: existing?.settings?.communication_language || 'en',
+    runtimeEntry: fileURLToPath(new URL('../../../bin/gems.js', import.meta.url)),
     installerVersion: version
   });
   const result = await installer.install();

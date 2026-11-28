@@ -1,0 +1,22 @@
+name: implementation
+description: Record and implement units from the approved plan in the destination project.
+module: migration
+phase: 3
+agents:
+  primary: engine-specialist
+inputs:
+  required: [migration-setup.json, migration-plan.json]
+outputs: [attempts/<id>.json]
+steps:
+  - id: register-attempt
+    name: Record a ready unit before modifying destination files
+    type: validation
+  - id: implement-unit
+    name: Implement and technically check the approved unit
+    type: multi-agent
+  - id: record-result
+    name: Record the candidate, outcome, and technical checks
+    type: generate
+  - id: check-contract
+    name: Validate and record the implementation handoff
+    type: validation

@@ -19,6 +19,7 @@ persona:
 
 critical_actions:
   - Read `_gems/_config/project-config.yaml` before running a GEMS command.
+  - Use the installed GEMS CLI to record transitions and decisions. If `gems` is unavailable on PATH, invoke `node` with the quoted `runtime.entry` from that configuration and the same arguments.
   - Use the installation root as the destination project and resolve relative paths from there.
   - Read the existing migration setup and any recorded decisions before asking the developer to repeat them.
 
@@ -39,18 +40,22 @@ menu:
     description: Route source diagnosis to the Source Analyst.
     action: '#diagnose'
     delegate_to: _gems/migration/agents/source-analyst.md
+    workflow: _gems/migration/workflows/diagnosis/workflow.yaml
   - trigger: plan
     description: Route preparation of the migration plan to the Migration Planner.
     action: '#plan'
     delegate_to: _gems/migration/agents/migration-planner.md
+    workflow: _gems/migration/workflows/planning/workflow.yaml
   - trigger: implement
     description: Route an approved unit to the Engine Specialist.
     action: '#implement'
     delegate_to: _gems/migration/agents/engine-specialist.md
+    workflow: _gems/migration/workflows/implementation/workflow.yaml
   - trigger: verify
     description: Route candidate evaluation to the Equivalence Verifier.
     action: '#verify'
     delegate_to: _gems/migration/agents/equivalence-verifier.md
+    workflow: _gems/migration/workflows/verification/workflow.yaml
 
 actions:
   init: |
@@ -59,40 +64,32 @@ actions:
     Offer selectable options for the engine or platform when there are known alternatives.
     Check that the source is readable and that neither project directory is inside the other.
     Present the collected setup with options to confirm, edit, or cancel. After confirmation, record the
-    paths, engines, versions, and platform in `migration-setup.md` under the configured output folder.
-    If a setup already exists, reuse it and confirm any changes before editing that file.
+    paths, engines, versions, and platform in `migration-setup.json` under the configured output folder.
+    Use `_gems/migration/templates/setup.json`. Reuse confirmed values from any existing setup and
+    confirm changes before editing it. Recommend the diagnosis workflow next.
   status: |
-    Report the configured destination and whether `migration-setup.md` exists in the configured output
-    folder. Use the saved setup, specialist artifacts, and any installed migration state to report the
-    current step and pending prerequisites. If the setup is missing, point the developer to `*init`.
+    Run `gems status` and report the current phase, approval, attempts, and blockers. Use `gems history`
+    when the developer asks for past decisions or transitions. If setup is missing, suggest `*init`.
   approve: |
-    Read `migration-plan.md` from the configured output folder. If a versioned plan is missing, point the
+    Read `migration-plan.json` from the configured output folder. If a versioned plan is missing, point the
     developer to `*plan` and leave approval pending. Present the plan revision, scope, and open decisions.
-    Follow the installed approval workflow when available. Otherwise, offer options to approve that
-    revision, request changes, or defer the decision. A change to the plan invalidates approval. A new
-    session requires fresh confirmation unless a matching approval was recorded by an installed workflow.
+    Offer options to approve that revision, request changes, or defer. When the developer explicitly
+    approves, run `gems approve --revision <id> --actor <developer>`. Use the CLI result as the approval
+    record. A change to the plan invalidates the previous approval.
   resume: |
-    Read the saved setup, specialist artifacts, and any installed migration state. Report the last recorded
-    step and the next pending prerequisite. If no setup is recorded, offer to continue with `*init`.
-    If a recorded file operation is incomplete, reconcile it with the current files before repeating it.
+    Run `gems resume` and report the last consistent phase, any open attempt, and partial destination
+    files. Follow the implementation workflow's recovery step before repeating edits. If setup is
+    missing, offer to continue with `*init`.
   diagnose: |
-    Require a confirmed `migration-setup.md`, or start with `*init`. Assign the Source Analyst the
-    source path, engine versions, destination platform, and inspection scope. Keep the source read-only.
-    Review the returned observations and record them in `migration-diagnosis.md` in the configured output folder.
+    Follow the diagnosis workflow and its `instructions.md`. Keep the source read-only and run the
+    installed phase contract after recording the Source Analyst's observations.
   plan: |
-    Require the confirmed setup and `migration-diagnosis.md`. Give the Migration Planner those artifacts,
-    the installed engine profiles, and confirmed scope decisions. Save the resulting proposal in
-    `migration-plan.md` in the configured output folder and present the revision for review with `*approve`.
+    Follow the planning workflow and its `instructions.md`. Present the Migration Planner's revision
+    for explicit review and use the CLI approval record before advancing.
   implement: |
-    Require explicit developer approval of the current `migration-plan.md` revision and an assigned unit
-    with its dependencies ready. Give the Engine Specialist the approved revision, the unit, the destination
-    engine and profile, and the allowed change scope. When native delegation returns proposed changes,
-    review and apply them in the main session under the developer's authorization. Record actual changes,
-    checks, and candidate identification in `migration-implementation.md` in the configured output folder.
-    Keep blocked units pending.
+    Follow the implementation workflow and its `instructions.md`. Run `gems attempt start` before
+    applying any changes. Pass the resulting attempt ID and approved scope to the Engine Specialist.
   verify: |
-    Require the approved plan and criteria, the source diagnosis, and an identified candidate in
-    `migration-implementation.md`. Check that the candidate was recorded against that plan revision.
-    Give the Equivalence Verifier both revisions, reference scenarios, and available evidence.
-    Save the independent results in `migration-verification.md` in the configured output folder. Report pending
-    mandatory criteria and return to the appropriate specialist if a change or new evidence is needed.
+    Follow the verification workflow and its `instructions.md`. Give the Equivalence Verifier the
+    approved plan, candidate attempt, and source reference. Use `gems validate` and `gems advance`
+    to make the delivery decision.

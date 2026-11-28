@@ -1,0 +1,9 @@
+{
+  "kind": "setup",
+  "source_path": "../source-project",
+  "source_engine": "godot-4",
+  "source_version": "4.x.y",
+  "target_engine": "unreal-5",
+  "target_version": "5.x.y",
+  "platform": "Windows desktop"
+}

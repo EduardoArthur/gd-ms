@@ -23,14 +23,15 @@ menu:
   - trigger: implement
     description: Prepare or apply the changes for one approved migration unit.
     action: '#implement'
+    workflow: '{module}/workflows/implementation/workflow.yaml'
 
 actions:
   implement: |
-    Use the approved `migration-plan.md` revision, the assigned unit and change scope, and the profile
+    Use the approved `migration-plan.json` revision, attempt ID, assigned unit and change scope, and the profile
     matching the engine in `_gems/_config/project-config.yaml`. Verify that prerequisites are satisfied.
     Describe the expected files, edits, and technical checks. A delegated specialist returns the proposed
     changes and commands to the Orchestrator. In the main session, apply changes only within the authorized
     destination scope. Run available checks within that scope and report checks that require the editor
-    or the developer. Return an entry for `migration-implementation.md` with the plan revision and unit,
+    or the developer. Return details for `attempts/<id>.json` with the plan revision and unit,
     candidate revision or reproducible identification, actual changes, commands, results, and blockers.
     If the need for a scope or strategy change emerges, return it to the Orchestrator for replanning.

@@ -40,6 +40,7 @@ export class SchemaValidator {
       workflow: 'workflow.schema.json',
       module: 'module.schema.json',
       'project-state': 'project-state.schema.json',
+      'migration-artifact': 'migration-artifact.schema.json',
       contract: 'contract.schema.json',
       'engine-profile': 'engine-profile.schema.json',
       preset: 'preset.schema.json'

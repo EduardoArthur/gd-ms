@@ -40,6 +40,7 @@ test('installs all GEMS agents and preserves destination files on reinstall', as
     assert.equal(config.target_engine, 'unreal-5');
     assert.equal(config.settings.ide, 'codex');
     assert.equal(config.settings.output_folder, '_gems-output');
+    assert.match(config.runtime.entry, /[/\\]bin[/\\]gems\.js$/);
     assert.deepEqual(config.modules.installed, ['core', 'migration']);
     assert.deepEqual(manifest.modules.installed, config.modules.installed);
     assert.equal(manifest.gems_version, version);
@@ -58,6 +59,12 @@ test('installs all GEMS agents and preserves destination files on reinstall', as
     ]);
     const module = yaml.load(await read('_gems/migration/module.yaml'));
     assert.deepEqual(module.agents, Object.values(specialists));
+    assert.deepEqual(module.workflows, ['diagnosis', 'planning', 'implementation', 'verification']);
+    for (const name of module.workflows) {
+      const root = `_gems/migration/workflows/${name}`;
+      assert.equal(yaml.load(await read(`${root}/workflow.yaml`)).name, name);
+      assert.ok((await read(`${root}/instructions.md`)).includes('gems advance'));
+    }
     const { menu } = yaml.load(await read(orchestratorPath.replace('.md', '.agent.yaml')));
     for (const [command, id] of Object.entries(specialists)) {
       const agentPath = `_gems/migration/agents/${id}.md`;

@@ -1,0 +1,19 @@
+name: diagnosis
+description: Confirm the migration setup and diagnose the source and destination.
+module: migration
+phase: 1
+agents:
+  primary: source-analyst
+inputs:
+  required: [project-config.yaml]
+outputs: [migration-setup.json, migration-diagnosis.json]
+steps:
+  - id: confirm-setup
+    name: Confirm the migration setup
+    type: interactive
+  - id: inspect-projects
+    name: Inspect the source and destination and assess coverage
+    type: multi-agent
+  - id: check-contract
+    name: Validate and record the diagnosis handoff
+    type: validation

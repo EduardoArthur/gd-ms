@@ -6,5 +6,10 @@ agents:
   - migration-planner
   - engine-specialist
   - equivalence-verifier
+workflows:
+  - diagnosis
+  - planning
+  - implementation
+  - verification
 dependencies:
   - core

@@ -1,0 +1,7 @@
+# Implement a migration unit
+
+1. Use `gems status` to confirm the current phase is `implementation`. Read `gems resume`, confirm the current approved revision, and select a ready unit. Run `gems attempt start --unit <id> --actor <name>` before touching destination files. Keep the returned attempt ID. Stop if the command rejects the plan, dependencies, or open attempt.
+2. Give the Engine Specialist the approved plan, attempt ID, unit, and file scope. Apply authorized changes in the main session and run the planned technical checks. Preserve the source and unrelated destination files. Record editor or manual checks using their actual outcomes.
+3. Write `attempts/<id>.json` in the configured output folder using `../../templates/implementation.json`. Include the assigned unit and plan revision, candidate identity, the planned check IDs, actual procedures, tools and environment, outcomes, and any evidence paths relative to the output folder. Run `gems attempt finish <id> --actor <name>`. Record a failed outcome when a required check fails or cannot run.
+4. If interrupted, use `gems resume` to identify the open attempt and partial files. Complete that attempt after review, or run `gems attempt abandon <id> --reason <reason> --actor <name>`. Add `--reconciled` only after explicitly confirming the review of reported partial changes. Abandonment preserves destination files.
+5. When all units pass, run `gems validate` and `gems advance --phase implementation --actor <name>` to make the candidate available for verification.

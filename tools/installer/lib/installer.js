@@ -14,6 +14,7 @@ import { GitignoreGenerator } from './gitignore-generator.js';
 import { StateManager } from '../../../src/core/state/state-manager.js';
 import { ContractLoader } from '../../../src/core/contracts/contract-loader.js';
 import { EventLogger } from '../../../src/core/state/event-logger.js';
+import { MigrationState } from '../../../src/gems/migration-state.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -79,6 +80,7 @@ export class Installer {
       if (this.product === 'gems') {
         progressCallback('Creating output directories...');
         await this.fileManager.ensureDir(this.outputDir);
+        if (modules.includes('migration')) await new MigrationState(this.targetDir).initialize();
       } else {
         progressCallback('Generating manifest...');
         await this.generateManifest();
@@ -280,6 +282,7 @@ export class Installer {
         ...existing,
         project: { name: this.config.projectName, ...existing?.project },
         target_engine: this.config.targetEngine,
+        runtime: this.config.runtimeEntry ? { entry: this.config.runtimeEntry } : existing?.runtime,
         settings: {
           ...existing?.settings,
           output_folder: this.outputFolder,

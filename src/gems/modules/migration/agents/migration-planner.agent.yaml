@@ -23,14 +23,15 @@ menu:
   - trigger: plan
     description: Propose a versioned migration strategy, units, and criteria.
     action: '#plan'
+    workflow: '{module}/workflows/planning/workflow.yaml'
 
 actions:
   plan: |
-    Use `migration-setup.md`, `migration-diagnosis.md`, and available profiles under
+    Use `migration-setup.json`, `migration-diagnosis.json`, and available profiles under
     `_gems/migration/engine-profiles/`. Assess feasibility for the configured engine versions and platform.
     Describe what can be adapted or reimplemented, what is unsupported, and what needs confirmation.
-    Define ordered units with IDs, dependencies, allowed change scope, and expected outputs. Give each
+    Define ordered units with IDs, dependencies, allowed change scope, and technical checks with stable IDs. Give each
     criterion an ID, phase, scenario and inputs, reference behavior, evaluation method, required evidence,
     whether it is mandatory, and tolerance where applicable. Record pending decisions and suggest alternatives for blocked units.
-    Return `migration-plan.md` content as a proposed plan with a revision ID. Use a new revision ID
+    Return `migration-plan.json` content as a proposed plan with a revision ID. Use a new revision ID
     for substantive changes to an earlier plan and request review through the Orchestrator.

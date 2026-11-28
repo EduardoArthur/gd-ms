@@ -2,6 +2,7 @@ import { Command, Option } from 'commander';
 import { ModuleManager } from '../../tools/installer/index.js';
 import { version } from '../version.js';
 import { installGems } from './commands/gems-install.js';
+import { registerMigrationCommands } from './commands/gems-migration.js';
 
 export async function runGemsCli(argv = process.argv) {
   const program = new Command();
@@ -19,6 +20,8 @@ export async function runGemsCli(argv = process.argv) {
     .addOption(new Option('--ide <id>', 'Assistant integration').choices(['codex', 'none']))
     .option('-y, --yes', 'Skip prompts and use detected or saved settings')
     .action(options => installGems(options));
+
+  registerMigrationCommands(program);
 
   if (argv.length <= 2) {
     program.outputHelp();

@@ -23,13 +23,14 @@ menu:
   - trigger: diagnose
     description: Inspect the source and report the inventory, behavior, and gaps.
     action: '#diagnose'
+    workflow: '{module}/workflows/diagnosis/workflow.yaml'
 
 actions:
   diagnose: |
-    Use `migration-setup.md` from the configured output folder and the scope provided by the Orchestrator.
+    Use `migration-setup.json` from the configured output folder and the scope provided by the Orchestrator.
     Inspect relevant scenes, code, assets, project settings, and dependencies. Record file references and
     report resources that are unavailable, out of scope, or difficult to carry forward. Describe scenarios
     that reproduce the behavior, including inputs, observed outputs, and available evidence. If a scenario
     requires execution that is unavailable, record the gap and give the Orchestrator a procedure to run it.
-    Return the findings for `migration-diagnosis.md`, including the source revision, scope, inventory,
+    Return the findings for `migration-diagnosis.json`, including the source revision, scope, inventory,
     dependencies, scenarios, evidence, and open questions.

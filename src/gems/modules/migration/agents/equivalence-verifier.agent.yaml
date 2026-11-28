@@ -23,13 +23,14 @@ menu:
   - trigger: verify
     description: Evaluate the candidate revision against the approved criteria.
     action: '#verify'
+    workflow: '{module}/workflows/verification/workflow.yaml'
 
 actions:
   verify: |
-    Use `migration-diagnosis.md`, `migration-plan.md`, and `migration-implementation.md` from the
+    Use `migration-diagnosis.json`, `migration-plan.json`, and `attempts/<id>.json` from the
     configured output folder. Evaluate the applicable criteria for the requested unit or integration
     scope. Run available scenarios within the authorized scope or evaluate evidence for the specified
     candidate revision. Record each criterion as passed, failed, or inconclusive, with observed results,
     expected results, method, tolerance, and evidence or the reason it is unavailable. A build result
-    only satisfies criteria for that technical check. Return `migration-verification.md` content identifying
+    only satisfies criteria for that technical check. Return `migration-verification.json` content identifying
     the plan and candidate revisions, remaining mandatory criteria, divergences, and suggested follow-up.

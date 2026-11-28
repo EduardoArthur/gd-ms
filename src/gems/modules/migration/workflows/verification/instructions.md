@@ -1,0 +1,5 @@
+# Verify equivalence
+
+1. Use `gems status` to confirm the current phase is `verification` and identify the candidate and its attempt ID. Give the independent Equivalence Verifier the approved plan, accepted source reference, attempt report, and available evidence. Use the same candidate for the entire report.
+2. Record every criterion in `migration-verification.json` using `../../templates/verification.json`. Include its actual result and evidence. Record the environment, tool versions, inputs, and procedure used to produce the observation. Write evidence files under the configured output folder and reference their relative paths. Record unavailable or unreliable observations as inconclusive.
+3. Run `gems validate` and present the findings. Use `gems advance --phase verification --actor <name>` to record the delivery decision. If the transition is blocked, collect the missing evidence or resolve the divergence with the developer. Use `gems replan --reason <reason> --actor <name>` when resolving it requires a revised plan or new implementation cycle.

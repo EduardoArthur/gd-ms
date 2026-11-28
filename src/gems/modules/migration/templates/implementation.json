@@ -1,0 +1,8 @@
+{
+  "kind": "implementation",
+  "attempt_id": "replace-with-attempt-id",
+  "plan_revision": "r1",
+  "unit_id": "example-unit",
+  "outcome": "failed",
+  "technical_checks": [{ "id": "compile", "procedure": "Describe the command or editor operation used", "outcome": "inconclusive", "evidence": [] }]
+}

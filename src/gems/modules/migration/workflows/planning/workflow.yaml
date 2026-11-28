@@ -1,0 +1,19 @@
+name: planning
+description: Define and approve a versioned migration plan with measurable criteria.
+module: migration
+phase: 2
+agents:
+  primary: migration-planner
+inputs:
+  required: [migration-setup.json, migration-diagnosis.json]
+outputs: [migration-plan.json]
+steps:
+  - id: propose-plan
+    name: Propose a strategy and equivalence criteria
+    type: multi-agent
+  - id: approve-revision
+    name: Confirm a specific plan revision
+    type: decision
+  - id: check-contract
+    name: Validate and record the planning handoff
+    type: validation

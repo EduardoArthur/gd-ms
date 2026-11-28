@@ -1,0 +1,7 @@
+{
+  "kind": "verification",
+  "plan_revision": "r1",
+  "attempt_id": "replace-with-candidate-attempt-id",
+  "candidate_revision": "replace-with-candidate-revision",
+  "results": [{ "criterion_id": "example-behavior", "outcome": "inconclusive", "evidence": [], "notes": "Describe the observation or the missing evidence" }]
+}
